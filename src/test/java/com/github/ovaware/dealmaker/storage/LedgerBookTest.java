@@ -11,7 +11,7 @@ class LedgerBookTest {
     void sanitizesBlankAndOversizedFields() {
         LedgerBook book = LedgerBook.sanitized("  ", "", List.of("", "  hello  ", "x".repeat(2000)));
         assertEquals("Contract", book.title());
-        assertEquals("Devil Bargen", book.author());
+        assertEquals("Dealmaker", book.author());
         assertEquals(2, book.pages().size());
         assertEquals("hello", book.pages().get(0));
         assertEquals(LedgerBook.MAX_PAGE_LENGTH, book.pages().get(1).length());

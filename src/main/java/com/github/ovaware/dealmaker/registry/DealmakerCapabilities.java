@@ -47,6 +47,7 @@ public final class DealmakerCapabilities {
                 data.setSoulClaimed(loaded.soulClaimed());
                 data.ledger().clear();
                 data.ledger().addAll(loaded.ledger());
+                data.setDealmaker(loaded.dealmaker());
             });
         }
     }

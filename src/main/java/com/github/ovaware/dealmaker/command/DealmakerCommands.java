@@ -19,7 +19,14 @@ public final class DealmakerCommands {
     private DealmakerCommands() {}
 
     public static void register(RegisterCommandsEvent event) {
-        event.getDispatcher().register(Commands.literal("devilbargen")
+        event.getDispatcher().register(Commands.literal("dealmaker")
+                .then(Commands.literal("make").executes(context -> {
+                    DealService.make(context.getSource().getPlayerOrException());
+                    return 1;
+                }))
+                .then(Commands.literal("grant").requires(source -> source.hasPermission(2))
+                        .then(Commands.argument("target", EntityArgument.player()).executes(context -> grant(
+                                context.getSource().getPlayerOrException(), EntityArgument.getPlayer(context, "target")))))
                 .then(Commands.literal("accept")
                         .then(Commands.argument("deal", StringArgumentType.word())
                                 .executes(context -> reply(context.getSource().getPlayerOrException(),
@@ -105,6 +112,11 @@ public final class DealmakerCommands {
             return 0;
         }
         return reply(holder, DealService.forceDealSoulAll(holder));
+    }
+
+    private static int grant(ServerPlayer administrator, ServerPlayer target) {
+        com.github.ovaware.dealmaker.registry.DealmakerCapabilities.data(target).setDealmaker(true);
+        return reply(administrator, target.getName().getString() + " is now marked as a Dealmaker.");
     }
 
     private static int soulDamage(ServerPlayer holder, ServerPlayer target) {

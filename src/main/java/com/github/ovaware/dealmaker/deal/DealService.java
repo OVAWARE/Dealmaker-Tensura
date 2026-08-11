@@ -1,6 +1,7 @@
 package com.github.ovaware.dealmaker.deal;
 
 import com.github.ovaware.dealmaker.DealmakerMod;
+import com.github.ovaware.dealmaker.ai.DealParserRouter;
 import com.github.ovaware.dealmaker.item.ClaimedSoulItem;
 import com.github.ovaware.dealmaker.registry.DealmakerCapabilities;
 import com.github.ovaware.dealmaker.registry.DealmakerItems;
@@ -67,6 +68,58 @@ public final class DealService {
         return "Contract accepted.";
     }
 
+    /** Parses and binds the held signed book only for a player explicitly marked as a dealmaker. */
+    public static void make(ServerPlayer maker) {
+        if (!data(maker).dealmaker()) {
+            maker.sendSystemMessage(Component.literal("You are not marked as a Dealmaker.").withStyle(ChatFormatting.RED));
+            return;
+        }
+        ItemStack book = maker.getMainHandItem();
+        if (!book.is(net.minecraft.world.item.Items.WRITTEN_BOOK) || DealBook.isManaged(book)) {
+            maker.sendSystemMessage(Component.literal("Hold an unsigned written book containing the contract.").withStyle(ChatFormatting.RED));
+            return;
+        }
+        CompoundTag tag = book.getTag();
+        if (tag == null || !tag.contains("pages", Tag.TAG_LIST)) {
+            maker.sendSystemMessage(Component.literal("That written book has no contract text.").withStyle(ChatFormatting.RED));
+            return;
+        }
+        StringBuilder text = new StringBuilder();
+        ListTag pages = tag.getList("pages", Tag.TAG_STRING);
+        for (Tag page : pages) {
+            if (!text.isEmpty()) text.append('\n');
+            text.append(page.getAsString());
+        }
+        String contract = text.toString();
+        List<String> textErrors = DealPolicy.validateText(contract);
+        if (!textErrors.isEmpty()) {
+            maker.sendSystemMessage(Component.literal(String.join(" ", textErrors)).withStyle(ChatFormatting.RED));
+            return;
+        }
+        UUID pendingId = DealBook.markPending(book);
+        UUID makerId = maker.getUUID();
+        maker.sendSystemMessage(Component.literal("Parsing the contract...").withStyle(ChatFormatting.GRAY));
+        DealParserRouter.parse(contract).whenComplete((parsed, failure) -> maker.server.execute(() -> {
+            ServerPlayer current = maker.server.getPlayerList().getPlayer(makerId);
+            if (current == null) return;
+            ItemStack pending = DealBook.findPending(current, pendingId).orElse(null);
+            if (pending == null) return;
+            if (failure != null || parsed == null || !parsed.accepted()) {
+                DealBook.clearPending(pending);
+                String error = parsed == null ? "Contract parsing failed." : String.join(" ", parsed.errors());
+                current.sendSystemMessage(Component.literal(error).withStyle(ChatFormatting.RED));
+                return;
+            }
+            long now = current.serverLevel().getGameTime();
+            Deal deal = new Deal(UUID.randomUUID(), current.getUUID(), OPEN_ACCEPTOR, contract, parsed.clauses(),
+                    DealStatus.PENDING, now, now);
+            data(current).deals().add(deal);
+            DealBook.bind(pending, deal);
+            current.sendSystemMessage(Component.literal("Contract created. Give the signed book to another player to accept it with /dealmaker accept "
+                    + deal.id()).withStyle(ChatFormatting.GREEN));
+        }));
+    }
+
     public static String sever(ServerPlayer maker, UUID id) {
         Located located = locate(maker.server, id).orElse(null);
         if (located == null || !located.deal().dealmakerId().equals(maker.getUUID())) return "You do not own that deal.";
@@ -77,7 +130,7 @@ public final class DealService {
 
     public static void showDeals(ServerPlayer player) {
         List<Deal> deals = involved(player);
-        player.sendSystemMessage(Component.literal("Devil Bargen deals:").withStyle(ChatFormatting.DARK_RED));
+        player.sendSystemMessage(Component.literal("Dealmaker deals:").withStyle(ChatFormatting.DARK_RED));
         if (deals.isEmpty()) player.sendSystemMessage(Component.literal("No deals.").withStyle(ChatFormatting.GRAY));
         for (Deal deal : deals) player.sendSystemMessage(Component.literal(deal.id() + " [" + deal.status() + "] " + deal.originalText()).withStyle(ChatFormatting.GRAY));
     }

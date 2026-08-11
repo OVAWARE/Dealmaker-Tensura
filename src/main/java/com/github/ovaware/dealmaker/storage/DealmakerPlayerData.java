@@ -14,23 +14,27 @@ public final class DealmakerPlayerData {
             Deal.codec().listOf().optionalFieldOf("deals", List.of()).forGetter(DealmakerPlayerData::deals),
             UUID_CODEC.listOf().optionalFieldOf("stored_souls", List.of()).forGetter(DealmakerPlayerData::storedSouls),
             Codec.BOOL.optionalFieldOf("soul_claimed", false).forGetter(DealmakerPlayerData::soulClaimed),
-            LedgerBook.codec().listOf().optionalFieldOf("ledger", List.of()).forGetter(DealmakerPlayerData::ledger)
+            LedgerBook.codec().listOf().optionalFieldOf("ledger", List.of()).forGetter(DealmakerPlayerData::ledger),
+            Codec.BOOL.optionalFieldOf("dealmaker", false).forGetter(DealmakerPlayerData::dealmaker)
     ).apply(instance, DealmakerPlayerData::new));
 
     private final List<Deal> deals;
     private final List<UUID> storedSouls;
     private boolean soulClaimed;
     private final List<LedgerBook> ledger;
+    private boolean dealmaker;
 
-    private DealmakerPlayerData(List<Deal> deals, List<UUID> storedSouls, boolean soulClaimed, List<LedgerBook> ledger) {
+    private DealmakerPlayerData(List<Deal> deals, List<UUID> storedSouls, boolean soulClaimed, List<LedgerBook> ledger,
+                                boolean dealmaker) {
         this.deals = new ArrayList<>(deals.stream().map(Deal::migratedStatus).toList());
         this.storedSouls = new ArrayList<>(storedSouls.stream().distinct().limit(27).toList());
         this.soulClaimed = soulClaimed;
         this.ledger = new ArrayList<>(ledger.stream().limit(LedgerBook.MAX_ENTRIES).toList());
+        this.dealmaker = dealmaker;
     }
 
     public DealmakerPlayerData() {
-        this(List.of(), List.of(), false, List.of());
+        this(List.of(), List.of(), false, List.of(), false);
     }
 
     public List<Deal> deals() {
@@ -51,5 +55,13 @@ public final class DealmakerPlayerData {
 
     public List<LedgerBook> ledger() {
         return ledger;
+    }
+
+    public boolean dealmaker() {
+        return dealmaker;
+    }
+
+    public void setDealmaker(boolean dealmaker) {
+        this.dealmaker = dealmaker;
     }
 }
