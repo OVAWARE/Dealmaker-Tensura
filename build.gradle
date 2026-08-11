@@ -1,0 +1,62 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.134'
+}
+
+version = mod_version
+group = mod_group_id
+
+base { archivesName = mod_id }
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+repositories {
+    maven { url = 'https://maven.architectury.dev/' }
+    flatDir { dirs '../Tensurarune/libs' }
+}
+
+neoForge {
+    version = project.neo_version
+    parchment {
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
+    }
+    runs {
+        client { client() }
+        server {
+            server()
+            programArgument '--nogui'
+        }
+    }
+    mods {
+        "${mod_id}" { sourceSet(sourceSets.main) }
+    }
+}
+
+dependencies {
+    compileOnly fileTree(dir: '../Tensurarune/libs', include: '*.jar')
+    compileOnly 'dev.architectury:architectury-neoforge:13.0.8'
+    runtimeOnly files('../Tensurarune/libs/tensura-neoforge-2.0.1.0.jar')
+    runtimeOnly files('../Tensurarune/libs/manascore-neoforge-4.0.0.2.jar')
+    runtimeOnly 'dev.architectury:architectury-neoforge:13.0.8'
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'com.google.code.gson:gson:2.11.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+def generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
+    def props = [minecraft_version_range: minecraft_version_range,
+                 neo_version: neo_version, loader_version_range: loader_version_range,
+                 mod_id: mod_id, mod_name: mod_name, mod_license: mod_license,
+                 mod_version: mod_version]
+    inputs.properties props
+    expand props
+    from 'src/main/templates'
+    into 'build/generated/sources/modMetadata'
+}
+
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.named('test') { useJUnitPlatform() }

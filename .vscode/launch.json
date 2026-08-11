@@ -1,0 +1,49 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "request": "launch",
+      "name": "Client",
+      "presentation": {
+        "group": "Mod Development - Dealmaker-Tensura",
+        "order": 0
+      },
+      "projectName": "Dealmaker-Tensura",
+      "mainClass": "net.neoforged.devlaunch.Main",
+      "args": [
+        "@/home/ovaware/Desktop/Coding/Dealmaker-Tensura/build/moddev/clientRunProgramArgs.txt"
+      ],
+      "vmArgs": [
+        "@/home/ovaware/Desktop/Coding/Dealmaker-Tensura/build/moddev/clientRunVmArgs.txt",
+        "-Dfml.modFolders\u003ddealmaker%%/home/ovaware/Desktop/Coding/Dealmaker-Tensura/bin/main"
+      ],
+      "cwd": "${workspaceFolder}/run",
+      "env": {},
+      "console": "internalConsole",
+      "shortenCommandLine": "none"
+    },
+    {
+      "type": "java",
+      "request": "launch",
+      "name": "Server",
+      "presentation": {
+        "group": "Mod Development - Dealmaker-Tensura",
+        "order": 1
+      },
+      "projectName": "Dealmaker-Tensura",
+      "mainClass": "net.neoforged.devlaunch.Main",
+      "args": [
+        "@/home/ovaware/Desktop/Coding/Dealmaker-Tensura/build/moddev/serverRunProgramArgs.txt"
+      ],
+      "vmArgs": [
+        "@/home/ovaware/Desktop/Coding/Dealmaker-Tensura/build/moddev/serverRunVmArgs.txt",
+        "-Dfml.modFolders\u003ddealmaker%%/home/ovaware/Desktop/Coding/Dealmaker-Tensura/bin/main"
+      ],
+      "cwd": "${workspaceFolder}/run",
+      "env": {},
+      "console": "internalConsole",
+      "shortenCommandLine": "none"
+    }
+  ]
+}
