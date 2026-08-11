@@ -27,6 +27,9 @@ public final class DealmakerCommands {
                 .then(Commands.literal("grant").requires(source -> source.hasPermission(2))
                         .then(Commands.argument("target", EntityArgument.player()).executes(context -> grant(
                                 context.getSource().getPlayerOrException(), EntityArgument.getPlayer(context, "target")))))
+                .then(Commands.literal("give").requires(source -> source.hasPermission(2))
+                        .then(Commands.argument("target", EntityArgument.player()).executes(context -> grant(
+                                context.getSource().getPlayerOrException(), EntityArgument.getPlayer(context, "target")))))
                 .then(Commands.literal("accept")
                         .then(Commands.argument("deal", StringArgumentType.word())
                                 .executes(context -> reply(context.getSource().getPlayerOrException(),
