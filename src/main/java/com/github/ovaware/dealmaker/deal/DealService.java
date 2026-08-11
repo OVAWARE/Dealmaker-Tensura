@@ -214,13 +214,17 @@ public final class DealService {
                     Deal occurrence = new Deal(deal.id(), deal.dealmakerId(), deal.acceptorId(), deal.originalText(),
                             List.of(clause), deal.status(), deal.createdAt(), deal.nextDueAt());
                     if (!execute(occurrence, maker, acceptor, DealTrigger.ON_RECURRING_DUE)) {
-                        // A missed recurring obligation breaches the entire contract. Run every
-                        // explicit breach consequence together before permanently ending it.
-                        execute(deal, maker, acceptor, DealTrigger.ON_BREACH);
-                        deals.set(index, deal.withStatus(DealStatus.BREACHED));
-                        maker.sendSystemMessage(Component.literal("A Dealmaker contract was breached.").withStyle(ChatFormatting.DARK_RED));
-                        acceptor.sendSystemMessage(Component.literal("You breached a Dealmaker contract.").withStyle(ChatFormatting.DARK_RED));
-                        break;
+                        boolean hasBreachConsequence = deal.clauses().stream()
+                                .anyMatch(candidate -> candidate.trigger() == DealTrigger.ON_BREACH);
+                        if (hasBreachConsequence) {
+                            // A payment only breaches when the contract expressly defines a
+                            // breach consequence. Otherwise it is simply retried next period.
+                            execute(deal, maker, acceptor, DealTrigger.ON_BREACH);
+                            deals.set(index, deal.withStatus(DealStatus.BREACHED));
+                            maker.sendSystemMessage(Component.literal("A Dealmaker contract was breached.").withStyle(ChatFormatting.DARK_RED));
+                            acceptor.sendSystemMessage(Component.literal("You breached a Dealmaker contract.").withStyle(ChatFormatting.DARK_RED));
+                            break;
+                        }
                     }
                 }
             }
@@ -332,7 +336,9 @@ public final class DealService {
                 if (item == null || !moveItems(from, to, item, (int) clause.amount())) return false;
             } else if (clause.kind() == ClauseKind.TRANSFER_ALL_MATCHING_ITEMS) {
                 Item item = BuiltInRegistries.ITEM.getOptional(ResourceLocation.tryParse(clause.assetId())).orElse(null);
-                if (item == null || !moveItems(from, to, item, count(from, item))) return false;
+                if (item == null) return false;
+                int matching = count(from, item);
+                if (matching > 0 && !moveItems(from, to, item, matching)) return false;
             } else if (clause.kind() == ClauseKind.TRANSFER_INVENTORY_SLOT) {
                 int slot = slot(clause.assetId(), from);
                 if (slot < 0 || from.getInventory().getItem(slot).isEmpty() || !to.getInventory().add(from.getInventory().getItem(slot).copy())) return false;
