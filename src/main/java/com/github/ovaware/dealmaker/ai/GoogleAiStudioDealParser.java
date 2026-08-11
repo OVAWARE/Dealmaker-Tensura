@@ -56,7 +56,7 @@ public final class GoogleAiStudioDealParser implements AsyncDealParser {
         JsonObject content = new JsonObject();
         content.addProperty("role", "user");
         JsonObject part = new JsonObject();
-        part.addProperty("text", AiContractProtocol.INSTRUCTIONS + "\n<contract>\n" + contractText + "\n</contract>");
+        part.addProperty("text", AiContractProtocol.instructions() + "\n<contract>\n" + contractText + "\n</contract>");
         JsonArray parts = new JsonArray();
         parts.add(part);
         content.add("parts", parts);

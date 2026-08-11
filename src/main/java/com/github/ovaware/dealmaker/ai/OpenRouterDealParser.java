@@ -36,7 +36,7 @@ public final class OpenRouterDealParser implements AsyncDealParser {
         body.addProperty("max_tokens", Math.max(64, Math.min(2048, DealmakerConfigs.server().maxOutputTokens)));
         body.addProperty("stream", false);
         JsonArray messages = new JsonArray();
-        messages.add(message("system", AiContractProtocol.INSTRUCTIONS));
+        messages.add(message("system", AiContractProtocol.instructions()));
         messages.add(message("user", "<contract>\n" + contractText + "\n</contract>"));
         body.add("messages", messages);
         JsonObject format = new JsonObject();

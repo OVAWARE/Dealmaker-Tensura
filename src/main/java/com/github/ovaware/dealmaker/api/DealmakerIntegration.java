@@ -12,4 +12,13 @@ public interface DealmakerIntegration {
     void validate(DealClause clause, List<String> errors);
 
     boolean execute(DealClause clause, ServerPlayer from, ServerPlayer to);
+
+    /** Additional trusted instructions supplied to the remote contract parser. */
+    default String aiInstructions() {
+        return "";
+    }
+
+    /** Adds only the clause kinds an integration can safely execute. */
+    default void extendAiSchema(com.google.gson.JsonObject schema) {
+    }
 }

@@ -31,4 +31,13 @@ public final class DealmakerIntegrations {
         }
         return false;
     }
+
+    public static String aiInstructions() {
+        return INTEGRATIONS.stream().map(DealmakerIntegration::aiInstructions).filter(text -> !text.isBlank())
+                .collect(java.util.stream.Collectors.joining("\n"));
+    }
+
+    public static void extendAiSchema(com.google.gson.JsonObject schema) {
+        INTEGRATIONS.forEach(integration -> integration.extendAiSchema(schema));
+    }
 }
