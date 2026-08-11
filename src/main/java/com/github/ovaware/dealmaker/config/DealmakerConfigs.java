@@ -40,7 +40,7 @@ public final class DealmakerConfigs {
     private DealmakerConfigs() {}
 
     public static void init() {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, SPEC, "dealmaker-server.toml");
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SPEC, "dealmaker-common.toml");
         reload();
     }
 
