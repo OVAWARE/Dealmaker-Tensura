@@ -58,6 +58,6 @@ public final class ClaimedSoulItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         owner(stack).ifPresent(id -> tooltip.add(Component.literal("Bound to " + id).withStyle(ChatFormatting.DARK_GRAY)));
-        tooltip.add(Component.literal("Must remain in an inventory or Devil Bargen storage.").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.literal("Must remain in an inventory or Dealmaker storage.").withStyle(ChatFormatting.GRAY));
     }
 }

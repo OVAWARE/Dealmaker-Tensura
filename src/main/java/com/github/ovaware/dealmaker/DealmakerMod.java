@@ -98,7 +98,7 @@ public final class DealmakerMod {
 
             @Override
             public String getName() {
-                return "Devil Bargen configuration";
+                return "Dealmaker configuration";
             }
         });
     }

@@ -55,7 +55,7 @@ public final class OpenRouterDealParser implements AsyncDealParser {
                 .timeout(Duration.ofSeconds(Math.clamp(DealmakerConfigs.server().requestTimeoutSeconds, 5, 180)))
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + key)
-                .header("X-OpenRouter-Title", "Devil Bargen")
+                .header("X-OpenRouter-Title", "Dealmaker")
                 .POST(HttpRequest.BodyPublishers.ofString(body.toString(), StandardCharsets.UTF_8))
                 .build();
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8))

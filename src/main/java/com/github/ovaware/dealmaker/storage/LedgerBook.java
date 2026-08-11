@@ -5,7 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import java.util.List;
 
-/** A plain written-book template stored in the Devil Bargen ledger. */
+/** A plain written-book template stored in the Dealmaker ledger. */
 public record LedgerBook(String title, String author, List<String> pages) {
     public static final int MAX_ENTRIES = 16;
     public static final int MAX_TITLE_LENGTH = 32;
@@ -27,7 +27,7 @@ public record LedgerBook(String title, String author, List<String> pages) {
 
     public static LedgerBook sanitized(String title, String author, List<String> pages) {
         String cleanTitle = clamp(title == null || title.isBlank() ? "Contract" : title, MAX_TITLE_LENGTH);
-        String cleanAuthor = clamp(author == null || author.isBlank() ? "Devil Bargen" : author, MAX_AUTHOR_LENGTH);
+        String cleanAuthor = clamp(author == null || author.isBlank() ? "Dealmaker" : author, MAX_AUTHOR_LENGTH);
         List<String> cleanPages = pages == null ? List.of() : pages.stream()
                 .filter(page -> page != null && !page.isBlank())
                 .map(page -> clamp(page, MAX_PAGE_LENGTH))
