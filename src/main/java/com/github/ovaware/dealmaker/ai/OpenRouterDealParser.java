@@ -83,12 +83,12 @@ public final class OpenRouterDealParser implements AsyncDealParser {
             String text = root.getAsJsonArray("choices").get(0).getAsJsonObject()
                     .getAsJsonObject("message").get("content").getAsString();
             ParseResult result = AiContractProtocol.decode(text);
-            if (!result.accepted() && result.errors().contains("The AI returned malformed contract data.")) {
-                AiDiagnostics.malformedProgram("OpenRouter", model, AiContractProtocol.responseShape(text), text);
+            if (!result.accepted()) {
+                AiDiagnostics.rejectedResponse("OpenRouter", model, response.body(), result.errors());
             }
             return result;
         } catch (RuntimeException exception) {
-            AiDiagnostics.unreadableResponse("OpenRouter", model, exception);
+            AiDiagnostics.unreadableResponse("OpenRouter", model, exception, response.body());
             return ParseResult.rejected("OpenRouter returned an unreadable response.");
         }
     }

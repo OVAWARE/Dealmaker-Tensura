@@ -93,12 +93,12 @@ public final class GoogleAiStudioDealParser implements AsyncDealParser {
                     .getAsJsonObject("content").getAsJsonArray("parts");
             String text = selectJsonText(parts);
             ParseResult result = AiContractProtocol.decode(text);
-            if (!result.accepted() && result.errors().contains("The AI returned malformed contract data.")) {
-                AiDiagnostics.malformedProgram("Google AI Studio", model, AiContractProtocol.responseShape(text), text);
+            if (!result.accepted()) {
+                AiDiagnostics.rejectedResponse("Google AI Studio", model, response.body(), result.errors());
             }
             return result;
         } catch (RuntimeException exception) {
-            AiDiagnostics.unreadableResponse("Google AI Studio", model, exception);
+            AiDiagnostics.unreadableResponse("Google AI Studio", model, exception, response.body());
             return ParseResult.rejected("Google AI Studio returned an unreadable response.");
         }
     }

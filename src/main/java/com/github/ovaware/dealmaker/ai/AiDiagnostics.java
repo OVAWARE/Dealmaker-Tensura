@@ -22,15 +22,30 @@ final class AiDiagnostics {
                 provider, model, status, apiMessage(body));
     }
 
-    static void unreadableResponse(String provider, String model, RuntimeException error) {
-        DealmakerMod.LOGGER.warn("{} contract parsing returned an unreadable response for model {} ({})",
-                provider, model, error.getClass().getSimpleName());
+    static void rejectedResponse(String provider, String model, String response, java.util.List<String> errors) {
+        if (com.github.ovaware.dealmaker.config.DealmakerConfigs.server().logMalformedAiResponse) {
+            DealmakerMod.LOGGER.warn("{} rejected contract program for model {}; errors: {}; full response: {}",
+                    provider, model, String.join(" ", errors), response == null ? "<null>" : response);
+        } else {
+            DealmakerMod.LOGGER.warn("{} rejected contract program for model {}; errors: {}",
+                    provider, model, String.join(" ", errors));
+        }
+    }
+
+    static void unreadableResponse(String provider, String model, RuntimeException error, String response) {
+        if (com.github.ovaware.dealmaker.config.DealmakerConfigs.server().logMalformedAiResponse) {
+            DealmakerMod.LOGGER.warn("{} returned an unreadable response for model {} ({}); full response: {}",
+                    provider, model, error.getClass().getSimpleName(), response == null ? "<null>" : response);
+        } else {
+            DealmakerMod.LOGGER.warn("{} contract parsing returned an unreadable response for model {} ({})",
+                    provider, model, error.getClass().getSimpleName());
+        }
     }
 
     static void malformedProgram(String provider, String model, String shape, String response) {
         if (com.github.ovaware.dealmaker.config.DealmakerConfigs.server().logMalformedAiResponse) {
             DealmakerMod.LOGGER.warn("{} returned a malformed contract program for model {}; response shape: {}; response: {}",
-                    provider, model, shape, sanitizedResponse(response));
+                    provider, model, shape, response == null ? "<null>" : response);
         } else {
             DealmakerMod.LOGGER.warn("{} returned a malformed contract program for model {}; response shape: {}",
                     provider, model, shape);
@@ -78,9 +93,4 @@ final class AiDiagnostics {
         return error;
     }
 
-    private static String sanitizedResponse(String response) {
-        if (response == null) return "<null>";
-        response = response.replaceAll("[\\p{Cntrl}&&[^\\n\\t]]", " ").trim();
-        return response.substring(0, Math.min(response.length(), 2000));
-    }
 }
