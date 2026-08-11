@@ -2,6 +2,7 @@ package com.github.ovaware.dealmaker.deal;
 
 import com.github.ovaware.dealmaker.DealmakerMod;
 import com.github.ovaware.dealmaker.ai.DealParserRouter;
+import com.github.ovaware.dealmaker.api.DealmakerIntegrations;
 import com.github.ovaware.dealmaker.item.ClaimedSoulItem;
 import com.github.ovaware.dealmaker.registry.DealmakerCapabilities;
 import com.github.ovaware.dealmaker.registry.DealmakerItems;
@@ -303,6 +304,10 @@ public final class DealService {
         for (DealClause clause : deal.clauses()) if (clause.trigger() == trigger) {
             ServerPlayer from = party(clause.from(), maker, acceptor);
             ServerPlayer to = party(clause.to(), maker, acceptor);
+            if (DealmakerIntegrations.supports(clause)) {
+                if (!DealmakerIntegrations.execute(clause, from, to)) return false;
+                continue;
+            }
             if (clause.kind() == ClauseKind.TRANSFER_ITEM_AMOUNT || clause.kind() == ClauseKind.RECURRING_ITEM_PAYMENT) {
                 Item item = BuiltInRegistries.ITEM.getOptional(ResourceLocation.tryParse(clause.assetId())).orElse(null);
                 if (item == null || !moveItems(from, to, item, (int) clause.amount())) return false;

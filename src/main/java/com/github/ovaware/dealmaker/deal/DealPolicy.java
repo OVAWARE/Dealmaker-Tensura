@@ -1,5 +1,7 @@
 package com.github.ovaware.dealmaker.deal;
 
+import com.github.ovaware.dealmaker.api.DealmakerIntegrations;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -39,8 +41,12 @@ public final class DealPolicy {
                 errors.add("A malformed obligation was produced.");
                 continue;
             }
-            if (!isCoreClause(clause.kind())) {
+            if (!isCoreClause(clause.kind()) && !DealmakerIntegrations.supports(clause)) {
                 errors.add("This contract uses a feature provided only by a Dealmaker addon.");
+                continue;
+            }
+            if (!isCoreClause(clause.kind())) {
+                DealmakerIntegrations.validate(clause, errors);
                 continue;
             }
             if (clause.from() == Party.ANY_PLAYER || clause.to() == Party.ANY_PLAYER)
