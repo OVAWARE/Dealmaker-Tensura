@@ -3,7 +3,6 @@ package com.github.ovaware.dealmaker.storage;
 import com.github.ovaware.dealmaker.deal.Deal;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.neoforged.neoforge.attachment.IAttachmentHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +29,7 @@ public final class DealmakerPlayerData {
         this.ledger = new ArrayList<>(ledger.stream().limit(LedgerBook.MAX_ENTRIES).toList());
     }
 
-    public DealmakerPlayerData(IAttachmentHolder ignored) {
+    public DealmakerPlayerData() {
         this(List.of(), List.of(), false, List.of());
     }
 

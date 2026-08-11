@@ -1,4 +1,4 @@
 {
   "parent": "minecraft:item/generated",
-  "textures": { "layer0": "tensura:item/element_core_water" }
+  "textures": { "layer0": "minecraft:item/heart_of_the_sea" }
 }

@@ -1,7 +1,7 @@
 package com.github.ovaware.dealmaker.storage;
 
 import com.github.ovaware.dealmaker.item.ClaimedSoulItem;
-import com.github.ovaware.dealmaker.registry.DealmakerAttachments;
+import com.github.ovaware.dealmaker.registry.DealmakerCapabilities;
 import com.github.ovaware.dealmaker.registry.DealmakerItems;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleContainer;
@@ -18,7 +18,7 @@ public final class SoulStorageContainer extends SimpleContainer {
         super(27);
         this.owner = owner;
         int slot = 0;
-        for (UUID soul : owner.getData(DealmakerAttachments.PLAYER_DATA).storedSouls()) {
+        for (UUID soul : DealmakerCapabilities.data(owner).storedSouls()) {
             if (slot >= getContainerSize()) break;
             String name = owner.server.getProfileCache().get(soul).map(profile -> profile.getName()).orElse(soul.toString());
             setItem(slot++, ClaimedSoulItem.create(DealmakerItems.CLAIMED_SOUL.get(), soul, name));
@@ -39,7 +39,7 @@ public final class SoulStorageContainer extends SimpleContainer {
         for (int slot = 0; slot < getContainerSize(); slot++) {
             ClaimedSoulItem.owner(getItem(slot)).ifPresent(souls::add);
         }
-        var stored = owner.getData(DealmakerAttachments.PLAYER_DATA).storedSouls();
+        var stored = DealmakerCapabilities.data(owner).storedSouls();
         stored.clear();
         stored.addAll(souls);
     }

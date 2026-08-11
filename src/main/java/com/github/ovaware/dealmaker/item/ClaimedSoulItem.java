@@ -1,13 +1,11 @@
 package com.github.ovaware.dealmaker.item;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.entity.item.ItemEntity;
 
 import java.util.List;
@@ -24,19 +22,18 @@ public final class ClaimedSoulItem extends Item {
 
     public static ItemStack create(Item item, UUID owner, String name) {
         ItemStack stack = new ItemStack(item);
-        CompoundTag tag = new CompoundTag();
+        CompoundTag tag = stack.getOrCreateTag();
         tag.putUUID(SOUL_UUID, owner);
         tag.putString(SOUL_NAME, name);
-        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
-        stack.set(DataComponents.CUSTOM_NAME, Component.literal(name + "'s Soul").withStyle(ChatFormatting.AQUA));
+        stack.setHoverName(Component.literal(name + "'s Soul").withStyle(ChatFormatting.AQUA));
         return stack;
     }
 
     public static Optional<UUID> owner(ItemStack stack) {
         if (!(stack.getItem() instanceof ClaimedSoulItem)) return Optional.empty();
-        CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-        if (data == null || !data.copyTag().hasUUID(SOUL_UUID)) return Optional.empty();
-        return Optional.of(data.copyTag().getUUID(SOUL_UUID));
+        CompoundTag tag = stack.getTag();
+        if (tag == null || !tag.hasUUID(SOUL_UUID)) return Optional.empty();
+        return Optional.of(tag.getUUID(SOUL_UUID));
     }
 
     /** Bundles and other item-backed containers must never be able to nest a soul. */
@@ -56,7 +53,7 @@ public final class ClaimedSoulItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, net.minecraft.world.level.Level level, List<Component> tooltip, TooltipFlag flag) {
         owner(stack).ifPresent(id -> tooltip.add(Component.literal("Bound to " + id).withStyle(ChatFormatting.DARK_GRAY)));
         tooltip.add(Component.literal("Must remain in an inventory or Devil Bargen storage.").withStyle(ChatFormatting.GRAY));
     }

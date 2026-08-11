@@ -12,12 +12,6 @@ import java.util.regex.Pattern;
  * pass DealPolicy; model output is never treated as code, a command, or a registry lookup.
  */
 public final class ConservativeEnglishParser implements DealParser {
-    private static final Pattern UNIQUES_FOR_ATTRIBUTE_PERCENT = Pattern.compile(
-            "you\\s+will\\s+give\\s+me\\s+all\\s+(?:of\\s+)?your\\s+(?:unique|unqiue)(?:s| skills)?\\s*,?\\s*(?:and|in return)\\s+(?:in return\\s+)?i\\s+will\\s+give\\s+you\\s+(\\d+(?:\\.\\d+)?)%\\s+of\\s+my\\s+(strength|health)(?:\\s+stat)?",
-            Pattern.CASE_INSENSITIVE);
-    private static final Pattern UNIQUES_FOR_ATTRIBUTE_AMOUNT = Pattern.compile(
-            "you\\s+will\\s+give\\s+me\\s+all\\s+(?:of\\s+)?your\\s+(?:unique|unqiue)(?:s| skills)?\\s*,?\\s*(?:and|in return)\\s+(?:in return\\s+)?i\\s+will\\s+give\\s+you\\s+(\\d+(?:\\.\\d+)?)\\s+(strength|health)(?:\\s+stat)?",
-            Pattern.CASE_INSENSITIVE);
     private static final Pattern DAILY_PAYMENT = Pattern.compile(
             "every\\s+(?:in[- ]game\\s+)?day\\s+you\\s+will\\s+pay\\s+(?:me\\s+)?(\\d+)\\s+([a-z0-9_.:/ -]+?)(?:\\s*[,.]|\\s+if\\s+|$)",
             Pattern.CASE_INSENSITIVE);
@@ -36,24 +30,6 @@ public final class ConservativeEnglishParser implements DealParser {
         if (!errors.isEmpty()) return new ParseResult(List.of(), errors);
 
         List<DealClause> clauses = new ArrayList<>();
-        Matcher exchange = UNIQUES_FOR_ATTRIBUTE_PERCENT.matcher(text);
-        if (exchange.find()) {
-            double percent = Double.parseDouble(exchange.group(1));
-            clauses.add(new DealClause(ClauseKind.TRANSFER_ALL_SKILLS_IN_CATEGORY,
-                    Party.ACCEPTOR, Party.DEALMAKER, "unique", 0.0, 0L));
-            clauses.add(new DealClause(ClauseKind.TRANSFER_ATTRIBUTE_PERCENT,
-                    Party.DEALMAKER, Party.ACCEPTOR, attributeId(exchange.group(2)), percent, 0L));
-        } else {
-            Matcher amountExchange = UNIQUES_FOR_ATTRIBUTE_AMOUNT.matcher(text);
-            if (amountExchange.find()) {
-                clauses.add(new DealClause(ClauseKind.TRANSFER_ALL_SKILLS_IN_CATEGORY,
-                        Party.ACCEPTOR, Party.DEALMAKER, "unique", 0.0, 0L));
-                clauses.add(new DealClause(ClauseKind.TRANSFER_ATTRIBUTE_AMOUNT,
-                        Party.DEALMAKER, Party.ACCEPTOR, attributeId(amountExchange.group(2)),
-                        Double.parseDouble(amountExchange.group(1)), 0L));
-            }
-        }
-
         Matcher payment = DAILY_PAYMENT.matcher(text);
         if (payment.find()) {
             String rawItem = payment.group(2).trim().toLowerCase(Locale.ROOT);
@@ -73,9 +49,5 @@ public final class ConservativeEnglishParser implements DealParser {
         }
         errors.addAll(DealPolicy.validateClauses(clauses));
         return new ParseResult(List.copyOf(clauses), List.copyOf(errors));
-    }
-
-    private static String attributeId(String name) {
-        return "health".equalsIgnoreCase(name) ? "minecraft:generic.max_health" : "minecraft:generic.attack_damage";
     }
 }

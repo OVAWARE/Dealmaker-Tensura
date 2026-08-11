@@ -22,13 +22,13 @@ public enum ClauseKind {
     TRANSFER_INVENTORY_SLOT,
     TRANSFER_RESOURCE_AMOUNT,
     TRANSFER_RESOURCE_PERCENT,
-    /** Removes a fixed amount of EP, magicule, or aura and gives it to the other signer. */
+    /** Reserved for a future optional integration. Unsupported by Dealmaker Core. */
     DRAIN_RESOURCE_AMOUNT,
-    /** Removes a percentage of current EP, magicule, or aura and gives it to the other signer. */
+    /** Reserved for a future optional integration. Unsupported by Dealmaker Core. */
     DRAIN_RESOURCE_PERCENT,
-    /** Removes a fixed amount of EP, magicule, or aura without crediting either signer. */
+    /** Reserved for a future optional integration. Unsupported by Dealmaker Core. */
     DESTROY_RESOURCE_AMOUNT,
-    /** Removes a percentage of current EP, magicule, or aura without crediting either signer. */
+    /** Reserved for a future optional integration. Unsupported by Dealmaker Core. */
     DESTROY_RESOURCE_PERCENT,
     /** Legacy resource aliases retained only for saved-data decoding. */
     @Deprecated
@@ -43,7 +43,7 @@ public enum ClauseKind {
     TRANSFER_AURA_AMOUNT,
     @Deprecated
     TRANSFER_AURA_PERCENT,
-    /** Redirects only positive EP/magicule/aura deltas observed after acceptance. */
+    /** Reserved for a future optional integration. Unsupported by Dealmaker Core. */
     REDIRECT_RESOURCE_GAIN_PERCENT,
     REDIRECT_DAMAGE_PERCENT,
     /** Legacy save compatibility: canonical form is recurring TRANSFER_ITEM_AMOUNT. */

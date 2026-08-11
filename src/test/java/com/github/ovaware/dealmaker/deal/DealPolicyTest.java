@@ -10,7 +10,7 @@ class DealPolicyTest {
     @Test
     void rejectsNonFiniteAmountsAndTooFastRecurrence() {
         var errors = DealPolicy.validateClauses(List.of(
-                new DealClause(ClauseKind.TRANSFER_EP_AMOUNT, Party.ACCEPTOR, Party.DEALMAKER,
+                new DealClause(ClauseKind.TRANSFER_ITEM_AMOUNT, Party.ACCEPTOR, Party.DEALMAKER,
                         "", Double.NaN, 0L, DealTrigger.ON_ACCEPTANCE, DealCondition.ALWAYS),
                 new DealClause(ClauseKind.KILL_PLAYER, Party.ACCEPTOR, Party.DEALMAKER,
                         "", 0.0, 10L, DealTrigger.ON_RECURRING_DUE, DealCondition.ALWAYS)));
@@ -31,7 +31,7 @@ class DealPolicyTest {
     }
 
     @Test
-    void acceptsTypedSpatialAndResourceGainCapabilities() {
+    void rejectsAddonResourceCapabilities() {
         DealCondition region = new DealCondition(DealConditionType.PARTY_ENTERED_COORDINATE_RADIUS,
                 Party.ACCEPTOR, "", 0, "", "minecraft:overworld", 10, 64, -20, 8);
         var errors = DealPolicy.validateClauses(List.of(
@@ -40,7 +40,7 @@ class DealPolicyTest {
                 new DealClause(ClauseKind.REDIRECT_RESOURCE_GAIN_PERCENT, Party.ACCEPTOR, Party.DEALMAKER,
                         "magicule", 25.0, 0L, DealTrigger.ON_ACCEPTANCE, DealCondition.ALWAYS)));
 
-        assertTrue(errors.isEmpty(), () -> String.join(" ", errors));
+        assertTrue(errors.stream().anyMatch(error -> error.contains("addon")));
     }
 
     @Test
@@ -61,7 +61,7 @@ class DealPolicyTest {
     }
 
     @Test
-    void allowsImmediateItemEpAndSkillTransfers() {
+    void rejectsAddonAssetTransfers() {
         var errors = DealPolicy.validateClauses(List.of(
                 new DealClause(ClauseKind.TRANSFER_ITEM_AMOUNT, Party.DEALMAKER, Party.ACCEPTOR,
                         "minecraft:diamond", 10.0, 0L),
@@ -70,7 +70,7 @@ class DealPolicyTest {
                 new DealClause(ClauseKind.TRANSFER_SKILL, Party.DEALMAKER, Party.ACCEPTOR,
                         "tensura:great_sage", 0.0, 0L)));
 
-        assertTrue(errors.isEmpty(), () -> String.join(" ", errors));
+        assertTrue(errors.stream().anyMatch(error -> error.contains("addon")));
     }
 
     @Test
@@ -90,7 +90,7 @@ class DealPolicyTest {
     }
 
     @Test
-    void acceptsMagiculeDrainsAndRejectsInvalidLightLevels() {
+    void rejectsAddonResourceDrainsAndInvalidLightLevels() {
         DealCondition invalidLight = new DealCondition(DealConditionType.PARTY_LIGHT_LEVEL_AT_LEAST,
                 Party.ACCEPTOR, "", 16);
         var valid = DealPolicy.validateClauses(List.of(
@@ -102,7 +102,7 @@ class DealPolicyTest {
                 ClauseKind.KILL_PLAYER, Party.ACCEPTOR, Party.DEALMAKER,
                 "", 0.0, 0L, DealTrigger.ON_CONDITION_MET, invalidLight)));
 
-        assertTrue(valid.isEmpty(), () -> String.join(" ", valid));
+        assertTrue(valid.stream().anyMatch(error -> error.contains("addon")));
         assertTrue(invalid.stream().anyMatch(error -> error.contains("light-level")));
     }
 
@@ -116,8 +116,8 @@ class DealPolicyTest {
                 new DealClause(ClauseKind.KILL_PLAYER, Party.ACCEPTOR, Party.ACCEPTOR,
                         "", 0.0, 0L, DealTrigger.ON_CONDITION_MET, DealCondition.ALWAYS)));
         var transfer = DealPolicy.validateClauses(List.of(new DealClause(
-                ClauseKind.TRANSFER_RESOURCE_AMOUNT, Party.ACCEPTOR, Party.ACCEPTOR,
-                "magicule", 1.0, 0L, DealTrigger.ON_ACCEPTANCE, DealCondition.ALWAYS)));
+                ClauseKind.TRANSFER_ITEM_AMOUNT, Party.ACCEPTOR, Party.ACCEPTOR,
+                "minecraft:diamond", 1.0, 0L, DealTrigger.ON_ACCEPTANCE, DealCondition.ALWAYS)));
 
         assertTrue(effects.isEmpty(), () -> String.join(" ", effects));
         assertTrue(transfer.stream().anyMatch(error -> error.contains("same party")));

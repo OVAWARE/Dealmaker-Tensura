@@ -39,6 +39,10 @@ public final class DealPolicy {
                 errors.add("A malformed obligation was produced.");
                 continue;
             }
+            if (!isCoreClause(clause.kind())) {
+                errors.add("This contract uses a feature provided only by a Dealmaker addon.");
+                continue;
+            }
             if (clause.from() == Party.ANY_PLAYER || clause.to() == Party.ANY_PLAYER)
                 errors.add("ANY_PLAYER is only valid in a condition, not as a transfer party.");
             else if (clause.from() == clause.to() && requiresDistinctParties(clause.kind()))
@@ -49,7 +53,7 @@ public final class DealPolicy {
             validateCondition(clause.condition(), errors);
             validateTrigger(clause, errors);
             if (!seen.add(String.valueOf(clause))) errors.add("Duplicate obligations are not allowed.");
-            if (clause.kind() == ClauseKind.REDIRECT_DAMAGE_PERCENT || clause.kind() == ClauseKind.REDIRECT_RESOURCE_GAIN_PERCENT) {
+            if (clause.kind() == ClauseKind.REDIRECT_DAMAGE_PERCENT) {
                 String redirectKey = clause.kind() + "|" + clause.from() + "|" + clause.to() + "|" + clause.assetId();
                 if (!persistentRedirects.add(redirectKey)) errors.add("Conflicting persistent redirects are not allowed in one deal.");
             }
@@ -102,40 +106,6 @@ public final class DealPolicy {
                     if (!isInventorySlot(clause.assetId()) || clause.amount() != 0.0)
                         errors.add("Invalid inventory-slot transfer.");
                 }
-                case TRANSFER_RESOURCE_AMOUNT -> {
-                    if (!(clause.assetId().equals("ep") || clause.assetId().equals("magicule") || clause.assetId().equals("aura"))
-                            || !(clause.amount() > 0.0)) errors.add("Invalid resource transfer.");
-                }
-                case TRANSFER_RESOURCE_PERCENT -> {
-                    if (!(clause.assetId().equals("ep") || clause.assetId().equals("magicule") || clause.assetId().equals("aura"))
-                            || !(clause.amount() > 0.0 && clause.amount() <= 100.0)) errors.add("Invalid resource percentage transfer.");
-                }
-                case DRAIN_RESOURCE_AMOUNT, DESTROY_RESOURCE_AMOUNT -> {
-                    if (!(clause.assetId().equals("ep") || clause.assetId().equals("magicule") || clause.assetId().equals("aura"))
-                            || !(clause.amount() > 0.0)) errors.add("Invalid resource drain.");
-                }
-                case DRAIN_RESOURCE_PERCENT, DESTROY_RESOURCE_PERCENT -> {
-                    if (!(clause.assetId().equals("ep") || clause.assetId().equals("magicule") || clause.assetId().equals("aura"))
-                            || !(clause.amount() > 0.0 && clause.amount() <= 100.0)) errors.add("Invalid resource-drain percentage.");
-                }
-                case TRANSFER_EP_AMOUNT -> {
-                    if (!clause.assetId().isEmpty() || !(clause.amount() > 0.0))
-                        errors.add("Invalid EP transfer.");
-                }
-                case TRANSFER_EP_PERCENT, TRANSFER_MAGICULE_PERCENT, TRANSFER_AURA_PERCENT -> {
-                    if (!clause.assetId().isEmpty() || !(clause.amount() > 0.0 && clause.amount() <= 100.0))
-                        errors.add("Invalid Tensura resource percentage transfer.");
-                }
-                case TRANSFER_MAGICULE_AMOUNT, TRANSFER_AURA_AMOUNT -> {
-                    if (!clause.assetId().isEmpty() || !(clause.amount() > 0.0))
-                        errors.add("Invalid Tensura resource transfer.");
-                }
-                case REDIRECT_RESOURCE_GAIN_PERCENT -> {
-                    if (!(clause.assetId().equals("ep") || clause.assetId().equals("magicule") || clause.assetId().equals("aura"))
-                            || !(clause.amount() > 0.0 && clause.amount() <= 100.0) || clause.periodTicks() != 0L)
-                        errors.add("Invalid resource-gain redirection.");
-                    if (clause.trigger() != DealTrigger.ON_ACCEPTANCE) errors.add("Resource-gain redirection is an ongoing acceptance grant.");
-                }
                 case REDIRECT_DAMAGE_PERCENT -> {
                     if (!clause.assetId().isEmpty() || !(clause.amount() > 0.0 && clause.amount() <= 100.0) || clause.periodTicks() != 0L)
                         errors.add("Invalid damage redirection.");
@@ -186,9 +156,7 @@ public final class DealPolicy {
      * Keep the no-op guard on mutations that actually move or restore an asset.
      */
     private static boolean requiresDistinctParties(ClauseKind kind) {
-        return kind != ClauseKind.DESTROY_RESOURCE_AMOUNT
-                && kind != ClauseKind.DESTROY_RESOURCE_PERCENT
-                && kind != ClauseKind.DEAL_DAMAGE_AMOUNT
+        return kind != ClauseKind.DEAL_DAMAGE_AMOUNT
                 && kind != ClauseKind.SET_ON_FIRE_SECONDS
                 && kind != ClauseKind.KILL_PLAYER
                 && kind != ClauseKind.END_DEAL;
@@ -210,6 +178,10 @@ public final class DealPolicy {
     }
 
     private static void validateConditionLeaf(DealCondition condition, List<String> errors) {
+        if (!isCoreCondition(condition.type())) {
+            errors.add("This contract condition requires a Dealmaker addon.");
+            return;
+        }
         if (!Double.isFinite(condition.x()) || !Double.isFinite(condition.y()) || !Double.isFinite(condition.z())
                 || !Double.isFinite(condition.radius())) errors.add("Condition coordinates must be finite.");
         if ((!condition.useX() || !condition.useY() || !condition.useZ())
@@ -309,11 +281,6 @@ public final class DealPolicy {
             if ((!condition.dimensionId().isEmpty() && !condition.dimensionId().matches("[a-z0-9_.-]+:[a-z0-9_./-]+")) || !(condition.radius() > 0.0 && condition.radius() <= 30_000_000.0)
                     || condition.party() == Party.ANY_PLAYER || !condition.assetId().isEmpty() || condition.amount() != 0)
                 errors.add("Invalid coordinate-radius condition.");
-        } else if (condition.type() == DealConditionType.PARTY_RESOURCE_AT_LEAST
-                || condition.type() == DealConditionType.PARTY_RESOURCE_INCREASED) {
-            if (!(condition.assetId().equals("ep") || condition.assetId().equals("magicule") || condition.assetId().equals("aura"))
-                    || condition.amount() < 1 || condition.party() == Party.ANY_PLAYER)
-                errors.add("Invalid Tensura resource condition.");
         } else {
             if (!isItemOrTag(condition.assetId()) || condition.amount() < 1 || !condition.slot().isEmpty())
                 errors.add("Invalid item condition.");
@@ -343,5 +310,29 @@ public final class DealPolicy {
     /** An item condition accepts either an exact registry id or a server data-pack item tag (#namespace:path). */
     private static boolean isItemOrTag(String id) {
         return id != null && id.matches("#?[a-z0-9_.-]+:[a-z0-9_./-]+");
+    }
+
+    private static boolean isCoreClause(ClauseKind kind) {
+        return switch (kind) {
+            case TRANSFER_ATTRIBUTE_PERCENT, TRANSFER_ATTRIBUTE_AMOUNT, REVOKE_ATTRIBUTE_GRANTS,
+                    TRANSFER_ITEM_AMOUNT, TRANSFER_ALL_MATCHING_ITEMS, TRANSFER_INVENTORY_SLOT,
+                    REDIRECT_DAMAGE_PERCENT, RECURRING_ITEM_PAYMENT, FORFEIT_SOUL, KILL_PLAYER,
+                    DEAL_DAMAGE_AMOUNT, SET_ON_FIRE_SECONDS, END_DEAL -> true;
+            default -> false;
+        };
+    }
+
+    private static boolean isCoreCondition(DealConditionType type) {
+        return switch (type) {
+            case ALWAYS, PARTY_HAS_ITEM, PARTY_LACKS_ITEM, PARTY_HAS_ITEM_IN_SLOT, PARTY_HOLDS_ANY_ITEM,
+                    ITEM_ENTERED_INVENTORY, PARTY_STAT_AT_LEAST, PARTY_STAT_INCREASED, CHAT_MESSAGE_CONTAINS,
+                    PARTY_DIES, PARTY_IS_CROUCHING, PARTY_IS_SPRINTING, PARTY_IS_SWIMMING, PARTY_IS_ON_GROUND,
+                    PARTY_WITHIN_DISTANCE_OF_PARTY, PARTY_OUTSIDE_DISTANCE_OF_PARTY, PARTY_IN_DIMENSION,
+                    PARTY_NOT_IN_DIMENSION, PARTY_CHANGED_DIMENSION, PARTY_WITHIN_COORDINATE_RADIUS,
+                    PARTY_OUTSIDE_COORDINATE_RADIUS, PARTY_ENTERED_COORDINATE_RADIUS, PARTY_LEFT_COORDINATE_RADIUS,
+                    PARTY_HARMED_PARTY, PARTY_WEATHER_IS, PARTY_TIME_OF_DAY_IS, PARTY_LIGHT_LEVEL_AT_LEAST,
+                    PARTY_ACCEPTED_OTHER_DEAL -> true;
+            default -> false;
+        };
     }
 }

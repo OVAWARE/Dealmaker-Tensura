@@ -4,14 +4,12 @@ import com.github.ovaware.dealmaker.deal.DealService;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import io.github.manasmods.tensura.storage.TensuraStorages;
-import io.github.manasmods.tensura.storage.Alignment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.RegisterCommandsEvent;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -60,27 +58,13 @@ public final class DealmakerCommands {
                         .then(Commands.literal("damage")
                                 .then(Commands.argument("target", EntityArgument.player())
                                         .executes(context -> soulDamage(context.getSource().getPlayerOrException(), EntityArgument.getPlayer(context, "target")))))
-                        .then(Commands.literal("take_ep")
-                                .then(Commands.argument("target", EntityArgument.player())
-                                        .then(Commands.argument("amount", DoubleArgumentType.doubleArg(1.0, 1.0E15))
-                                                .executes(context -> takeEp(context.getSource().getPlayerOrException(), EntityArgument.getPlayer(context, "target"),
-                                                        DoubleArgumentType.getDouble(context, "amount"))))))
                         .then(Commands.literal("summon")
                                 .then(Commands.argument("target", EntityArgument.player())
                                         .executes(context -> summon(context.getSource().getPlayerOrException(), EntityArgument.getPlayer(context, "target")))))
                         .then(Commands.literal("inventory")
                                 .then(Commands.argument("target", EntityArgument.player())
                                         .executes(context -> inventory(context.getSource().getPlayerOrException(), EntityArgument.getPlayer(context, "target")))))
-                        .then(Commands.literal("name")
-                                .then(Commands.argument("target", EntityArgument.player())
-                                        .then(Commands.argument("name", StringArgumentType.greedyString())
-                                                .executes(context -> rename(context.getSource().getPlayerOrException(), EntityArgument.getPlayer(context, "target"),
-                                                        StringArgumentType.getString(context, "name"))))))
-                        .then(Commands.literal("alignment")
-                                .then(Commands.argument("target", EntityArgument.player())
-                                        .then(Commands.argument("alignment", StringArgumentType.word())
-                                                .executes(context -> alignment(context.getSource().getPlayerOrException(), EntityArgument.getPlayer(context, "target"),
-                                                        StringArgumentType.getString(context, "alignment"))))))));
+                        ));
 
         event.getDispatcher().register(Commands.literal("devilhost")
                 .then(Commands.literal("admin").requires(source -> source.hasPermission(2))
@@ -141,18 +125,6 @@ public final class DealmakerCommands {
         return reply(administrator, "Forcefully returned " + soulOwner.getName().getString() + "'s soul.");
     }
 
-    private static int takeEp(ServerPlayer holder, ServerPlayer target, double requested) {
-        if (!custody(holder, target, "take_ep")) return 0;
-        var from = TensuraStorages.getExistenceFrom(target);
-        var to = TensuraStorages.getExistenceFrom(holder);
-        double amount = Math.min(requested, Math.max(0.0, from.getEP()));
-        from.setEP(from.getEP() - amount);
-        to.setEP(to.getEP() + amount);
-        from.markDirty();
-        to.markDirty();
-        return reply(holder, "Took " + Math.round(amount) + " EP from " + target.getName().getString() + ".");
-    }
-
     private static int summon(ServerPlayer holder, ServerPlayer target) {
         if (!custody(holder, target, "summon")) return 0;
         target.teleportTo(holder.serverLevel(), holder.getX(), holder.getY(), holder.getZ(),
@@ -163,30 +135,6 @@ public final class DealmakerCommands {
     private static int inventory(ServerPlayer holder, ServerPlayer target) {
         if (!custody(holder, target, "inventory")) return 0;
         return DealService.openSoulInventory(holder, target) ? 1 : 0;
-    }
-
-    private static int rename(ServerPlayer holder, ServerPlayer target, String name) {
-        if (!custody(holder, target, "name")) return 0;
-        String cleaned = name.trim();
-        if (cleaned.isEmpty() || cleaned.length() > 48) return reply(holder, "A soulbound name must be 1 to 48 characters.");
-        var existence = TensuraStorages.getExistenceFrom(target);
-        existence.setName(cleaned);
-        existence.markDirty();
-        return reply(holder, "Renamed " + target.getName().getString() + " to " + cleaned + ".");
-    }
-
-    private static int alignment(ServerPlayer holder, ServerPlayer target, String requested) {
-        if (!custody(holder, target, "alignment")) return 0;
-        Alignment alignment;
-        try {
-            alignment = Alignment.valueOf(requested.trim().toUpperCase(java.util.Locale.ROOT));
-        } catch (IllegalArgumentException exception) {
-            return reply(holder, "Unknown alignment. Use default, majin, holy, or chaos.");
-        }
-        var existence = TensuraStorages.getExistenceFrom(target);
-        existence.setAlignment(alignment);
-        existence.markDirty();
-        return reply(holder, "Set " + target.getName().getString() + "'s alignment to " + alignment.getSerializedName() + ".");
     }
 
     private static boolean custody(ServerPlayer holder, ServerPlayer target, String action) {

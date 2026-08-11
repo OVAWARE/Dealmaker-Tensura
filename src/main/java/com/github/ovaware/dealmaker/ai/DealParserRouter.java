@@ -42,8 +42,8 @@ public final class DealParserRouter {
 
     private static HttpClient httpClient() {
         return HttpClient.newBuilder()
-                .connectTimeout(java.time.Duration.ofSeconds(Math.clamp(
-                        DealmakerConfigs.server().connectTimeoutSeconds, 2, 60)))
+                .connectTimeout(java.time.Duration.ofSeconds(Math.max(2,
+                        Math.min(60, DealmakerConfigs.server().connectTimeoutSeconds))))
                 .followRedirects(HttpClient.Redirect.NEVER)
                 .build();
     }

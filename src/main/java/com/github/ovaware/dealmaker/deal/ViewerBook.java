@@ -1,9 +1,7 @@
 package com.github.ovaware.dealmaker.deal;
 
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 
 import java.util.Optional;
 
@@ -42,9 +40,8 @@ public final class ViewerBook {
     }
 
     public static Optional<Kind> kind(ItemStack stack) {
-        CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-        if (data == null) return Optional.empty();
-        CompoundTag tag = data.copyTag();
+        CompoundTag tag = stack.getTag();
+        if (tag == null) return Optional.empty();
         if (!tag.contains(KIND)) return Optional.empty();
         return Kind.fromId(tag.getString(KIND));
     }
@@ -54,24 +51,20 @@ public final class ViewerBook {
         tag.putString(KIND, kind.id());
         tag.putUUID(BOUND_TO, boundTo);
         tag.putString(FINGERPRINT, fingerprint);
-        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 
     static Optional<java.util.UUID> boundTo(ItemStack stack) {
-        CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-        if (data == null) return Optional.empty();
-        CompoundTag tag = data.copyTag();
+        CompoundTag tag = stack.getTag();
+        if (tag == null) return Optional.empty();
         return tag.hasUUID(BOUND_TO) ? Optional.of(tag.getUUID(BOUND_TO)) : Optional.empty();
     }
 
     static String fingerprint(ItemStack stack) {
-        CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-        if (data == null) return "";
-        return data.copyTag().getString(FINGERPRINT);
+        CompoundTag tag = stack.getTag();
+        return tag == null ? "" : tag.getString(FINGERPRINT);
     }
 
     private static CompoundTag tag(ItemStack stack) {
-        CustomData existing = stack.get(DataComponents.CUSTOM_DATA);
-        return existing == null ? new CompoundTag() : existing.copyTag();
+        return stack.getOrCreateTag();
     }
 }

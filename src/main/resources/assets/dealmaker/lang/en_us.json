@@ -1,17 +1,3 @@
 {
-  "item.dealmaker.claimed_soul": "Claimed Soul",
-  "dealmaker.skill.devil_bargen": "Devil Bargen",
-  "dealmaker.skill.devil_bargen.description": "Creates and enforces server-authoritative bargains, appraises targets, and keeps a contract ledger.",
-  "dealmaker.skill.mode.devil_bargen.contract": "Contract",
-  "dealmaker.skill.mode.devil_bargen.appraisal": "Analytical Appraisal",
-  "dealmaker.skill.mode.devil_bargen.ledger": "Ledger",
-  "dealmaker.skill.mode.devil_bargen.soul_storage": "Soul Storage",
-  "dealmaker.skill.mode.devil_bargen.deals": "Active Deals",
-  "dealmaker.skill.mode.devil_bargen.end_deal": "Active Deals",
-  "tensura.skill.mode.devil_bargen.contract": "Contract",
-  "tensura.skill.mode.devil_bargen.appraisal": "Analytical Appraisal",
-  "tensura.skill.mode.devil_bargen.ledger": "Ledger",
-  "tensura.skill.mode.devil_bargen.soul_storage": "Soul Storage",
-  "tensura.skill.mode.devil_bargen.deals": "Active Deals",
-  "tensura.skill.mode.devil_bargen.end_deal": "Active Deals"
+  "item.dealmaker.claimed_soul": "Claimed Soul"
 }

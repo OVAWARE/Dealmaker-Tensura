@@ -64,8 +64,8 @@ public final class GoogleAiStudioDealParser implements AsyncDealParser {
         contents.add(content);
         body.add("contents", contents);
         JsonObject generation = new JsonObject();
-        generation.addProperty("temperature", Math.clamp(DealmakerConfigs.server().temperature, 0.0, 2.0));
-        generation.addProperty("maxOutputTokens", Math.clamp(DealmakerConfigs.server().maxOutputTokens, 64, 2048));
+        generation.addProperty("temperature", Math.max(0.0, Math.min(2.0, DealmakerConfigs.server().temperature)));
+        generation.addProperty("maxOutputTokens", Math.max(64, Math.min(2048, DealmakerConfigs.server().maxOutputTokens)));
         generation.addProperty("responseMimeType", "application/json");
         if (includeSchema) generation.add("responseSchema", AiContractProtocol.googleResponseSchema());
         body.add("generationConfig", generation);
@@ -104,7 +104,7 @@ public final class GoogleAiStudioDealParser implements AsyncDealParser {
     }
 
     private static Duration timeout() {
-        return Duration.ofSeconds(Math.clamp(DealmakerConfigs.server().requestTimeoutSeconds, 5, 180));
+        return Duration.ofSeconds(Math.max(5, Math.min(180, DealmakerConfigs.server().requestTimeoutSeconds)));
     }
 
     private static String selectJsonText(JsonArray parts) {

@@ -32,8 +32,8 @@ public final class OpenRouterDealParser implements AsyncDealParser {
 
         JsonObject body = new JsonObject();
         body.addProperty("model", model);
-        body.addProperty("temperature", Math.clamp(DealmakerConfigs.server().temperature, 0.0, 2.0));
-        body.addProperty("max_tokens", Math.clamp(DealmakerConfigs.server().maxOutputTokens, 64, 2048));
+        body.addProperty("temperature", Math.max(0.0, Math.min(2.0, DealmakerConfigs.server().temperature)));
+        body.addProperty("max_tokens", Math.max(64, Math.min(2048, DealmakerConfigs.server().maxOutputTokens)));
         body.addProperty("stream", false);
         JsonArray messages = new JsonArray();
         messages.add(message("system", AiContractProtocol.INSTRUCTIONS));
@@ -52,7 +52,7 @@ public final class OpenRouterDealParser implements AsyncDealParser {
         body.add("provider", provider);
 
         HttpRequest request = HttpRequest.newBuilder(ENDPOINT)
-                .timeout(Duration.ofSeconds(Math.clamp(DealmakerConfigs.server().requestTimeoutSeconds, 5, 180)))
+                .timeout(Duration.ofSeconds(Math.max(5, Math.min(180, DealmakerConfigs.server().requestTimeoutSeconds))))
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + key)
                 .header("X-OpenRouter-Title", "Devil Bargen")

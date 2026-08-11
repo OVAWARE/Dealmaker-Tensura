@@ -15,7 +15,7 @@ class AiContractProtocolTest {
                 ]}
                 """);
         var repaired = AiContractProtocol.repairBooleanSplit("if you leave 100 blocks of ~,~,0 you die", decoded);
-        var condition = repaired.clauses().getFirst().condition();
+        var condition = repaired.clauses().get(0).condition();
 
         assertFalse(condition.useX());
         assertFalse(condition.useY());
@@ -32,10 +32,10 @@ class AiContractProtocolTest {
         var repaired = AiContractProtocol.repairBooleanSplit("if you leave 100 blocks of 0,0 you die", decoded);
 
         assertTrue(repaired.accepted(), () -> String.join(" ", repaired.errors()));
-        assertTrue(repaired.clauses().getFirst().condition().useX());
-        assertFalse(repaired.clauses().getFirst().condition().useY());
-        assertTrue(repaired.clauses().getFirst().condition().useZ());
-        assertTrue(repaired.clauses().getFirst().condition().negated());
+        assertTrue(repaired.clauses().get(0).condition().useX());
+        assertFalse(repaired.clauses().get(0).condition().useY());
+        assertTrue(repaired.clauses().get(0).condition().useZ());
+        assertTrue(repaired.clauses().get(0).condition().negated());
     }
 
     @Test
@@ -58,10 +58,10 @@ class AiContractProtocolTest {
                 """);
 
         assertTrue(result.accepted(), () -> String.join(" ", result.errors()));
-        assertEquals(ClauseKind.TRANSFER_ITEM_AMOUNT, result.clauses().getFirst().kind());
+        assertEquals(ClauseKind.TRANSFER_ITEM_AMOUNT, result.clauses().get(0).kind());
         assertEquals(com.github.ovaware.dealmaker.deal.DealConditionType.PARTY_HAS_ITEM,
-                result.clauses().getFirst().condition().type());
-        assertTrue(result.clauses().getFirst().condition().negated());
+                result.clauses().get(0).condition().type());
+        assertTrue(result.clauses().get(0).condition().negated());
     }
 
     @Test
@@ -76,7 +76,7 @@ class AiContractProtocolTest {
 
         assertTrue(repaired.accepted(), () -> String.join(" ", repaired.errors()));
         assertEquals(1, repaired.clauses().size());
-        var condition = repaired.clauses().getFirst().condition();
+        var condition = repaired.clauses().get(0).condition();
         assertEquals(com.github.ovaware.dealmaker.deal.ConditionLogic.ALL, condition.logic());
         assertEquals(2, condition.terms().size());
         assertTrue(condition.terms().stream().anyMatch(term ->
@@ -94,8 +94,8 @@ class AiContractProtocolTest {
                 """);
 
         assertTrue(result.accepted(), () -> String.join(" ", result.errors()));
-        assertEquals(com.github.ovaware.dealmaker.deal.ConditionLogic.ANY, result.clauses().getFirst().condition().logic());
-        assertTrue(result.clauses().getFirst().condition().negated());
+        assertEquals(com.github.ovaware.dealmaker.deal.ConditionLogic.ANY, result.clauses().get(0).condition().logic());
+        assertTrue(result.clauses().get(0).condition().negated());
     }
 
     @Test
@@ -107,8 +107,8 @@ class AiContractProtocolTest {
                 """);
 
         assertTrue(result.accepted(), () -> String.join(" ", result.errors()));
-        var terms = result.clauses().getFirst().condition().terms();
-        assertFalse(terms.getFirst().useY());
+        var terms = result.clauses().get(0).condition().terms();
+        assertFalse(terms.get(0).useY());
         assertTrue(terms.get(1).useX());
         assertTrue(terms.get(1).useY());
         assertTrue(terms.get(1).useZ());
@@ -124,11 +124,11 @@ class AiContractProtocolTest {
         var repaired = AiContractProtocol.repairBooleanSplit("if you leave 10 blocks of 0,0 and are chrouching you die", decoded);
 
         assertTrue(repaired.accepted(), () -> String.join(" ", repaired.errors()));
-        var terms = repaired.clauses().getFirst().condition().terms();
-        assertEquals(10.0, terms.getFirst().radius());
-        assertTrue(terms.getFirst().useX());
-        assertFalse(terms.getFirst().useY());
-        assertTrue(terms.getFirst().useZ());
+        var terms = repaired.clauses().get(0).condition().terms();
+        assertEquals(10.0, terms.get(0).radius());
+        assertTrue(terms.get(0).useX());
+        assertFalse(terms.get(0).useY());
+        assertTrue(terms.get(0).useZ());
     }
 
     @Test
@@ -141,8 +141,8 @@ class AiContractProtocolTest {
 
         assertTrue(result.accepted(), () -> String.join(" ", result.errors()));
         assertEquals(com.github.ovaware.dealmaker.deal.DealConditionType.PARTY_WITHIN_COORDINATE_RADIUS,
-                result.clauses().getFirst().condition().type());
-        assertTrue(result.clauses().getFirst().condition().negated());
+                result.clauses().get(0).condition().type());
+        assertTrue(result.clauses().get(0).condition().negated());
     }
 
     @Test
@@ -155,7 +155,7 @@ class AiContractProtocolTest {
 
         assertTrue(result.accepted(), () -> String.join(" ", result.errors()));
         assertEquals(com.github.ovaware.dealmaker.deal.DealConditionType.PARTY_IN_DIMENSION,
-                result.clauses().getFirst().condition().type());
+                result.clauses().get(0).condition().type());
     }
 
     @Test
@@ -167,7 +167,7 @@ class AiContractProtocolTest {
                 """);
 
         assertTrue(result.accepted(), () -> String.join(" ", result.errors()));
-        assertEquals("MAIN_HAND", result.clauses().getFirst().assetId());
+        assertEquals("MAIN_HAND", result.clauses().get(0).assetId());
     }
 
     @Test
@@ -207,7 +207,7 @@ class AiContractProtocolTest {
                 """);
 
         assertTrue(result.accepted(), () -> String.join(" ", result.errors()));
-        assertEquals(ClauseKind.TRANSFER_ATTRIBUTE_AMOUNT, result.clauses().getFirst().kind());
+        assertEquals(ClauseKind.TRANSFER_ATTRIBUTE_AMOUNT, result.clauses().get(0).kind());
     }
 
     @Test
@@ -233,7 +233,7 @@ class AiContractProtocolTest {
     }
 
     @Test
-    void acceptsUltimateMagiculeAndHarmBreachProgram() {
+    void rejectsAddonAssetProgram() {
         var result = AiContractProtocol.decode("""
                 {"supported":true,"rejectionReason":"","clauses":[
                   {"kind":"TRANSFER_ALL_ULTIMATE_SKILLS","from":"ACCEPTOR","to":"DEALMAKER","assetId":"","amount":0,"periodTicks":0,"trigger":"ON_ACCEPTANCE","condition":{"type":"ALWAYS","party":"ACCEPTOR","assetId":"","amount":0}},
@@ -242,11 +242,7 @@ class AiContractProtocolTest {
                 ]}
                 """);
 
-        assertTrue(result.accepted(), () -> String.join(" ", result.errors()));
-        assertEquals(ClauseKind.TRANSFER_ALL_SKILLS_IN_CATEGORY, result.clauses().getFirst().kind());
-        assertEquals("ultimate", result.clauses().getFirst().assetId());
-        assertEquals(ClauseKind.TRANSFER_RESOURCE_AMOUNT, result.clauses().get(1).kind());
-        assertEquals("magicule", result.clauses().get(1).assetId());
+        assertFalse(result.accepted());
     }
 
     @Test
@@ -269,7 +265,7 @@ class AiContractProtocolTest {
                 """);
 
         assertTrue(result.accepted(), () -> String.join(" ", result.errors()));
-        assertEquals(ClauseKind.TRANSFER_ALL_MATCHING_ITEMS, result.clauses().getFirst().kind());
+        assertEquals(ClauseKind.TRANSFER_ALL_MATCHING_ITEMS, result.clauses().get(0).kind());
     }
 
     @Test
@@ -281,8 +277,8 @@ class AiContractProtocolTest {
                 """);
 
         assertTrue(result.accepted(), () -> String.join(" ", result.errors()));
-        assertEquals("#modpack:runtime_category", result.clauses().getFirst().condition().assetId());
-        assertEquals("MAIN_HAND", result.clauses().getFirst().condition().slot());
+        assertEquals("#modpack:runtime_category", result.clauses().get(0).condition().assetId());
+        assertEquals("MAIN_HAND", result.clauses().get(0).condition().slot());
     }
 
     @Test
@@ -321,7 +317,7 @@ class AiContractProtocolTest {
     }
 
     @Test
-    void acceptsSpecificAndCategorySkillUseConditions() {
+    void rejectsSkillUseConditions() {
         var result = AiContractProtocol.decode("""
                 {"supported":true,"rejectionReason":"","clauses":[
                   {"kind":"KILL_PLAYER","from":"ACCEPTOR","to":"DEALMAKER","assetId":"","amount":0,"periodTicks":0,"trigger":"ON_CONDITION_MET","condition":{"type":"PARTY_USES_SKILL","party":"ACCEPTOR","assetId":"tensura:great_sage","amount":0}},
@@ -329,28 +325,28 @@ class AiContractProtocolTest {
                 ]}
                 """);
 
-        assertTrue(result.accepted(), () -> String.join(" ", result.errors()));
+        assertFalse(result.accepted());
     }
 
     @Test
-    void acceptsASeparateSkillShareClause() {
+    void rejectsSkillShareClause() {
         var result = AiContractProtocol.decode("""
                 {"supported":true,"rejectionReason":"","clauses":[
                   {"kind":"SHARE_SKILL","from":"DEALMAKER","to":"ACCEPTOR","assetId":"tensura:sloth","amount":0,"periodTicks":0,"trigger":"ON_ACCEPTANCE","condition":{"type":"ALWAYS","party":"ACCEPTOR","assetId":"","amount":0}}
                 ]}
                 """);
 
-        assertTrue(result.accepted(), () -> String.join(" ", result.errors()));
+        assertFalse(result.accepted());
     }
 
     @Test
-    void acceptsAuraPercentageTransfer() {
+    void rejectsAuraPercentageTransfer() {
         var result = AiContractProtocol.decode("""
                 {"supported":true,"rejectionReason":"","clauses":[
                   {"kind":"TRANSFER_AURA_PERCENT","from":"ACCEPTOR","to":"DEALMAKER","assetId":"","amount":50,"periodTicks":0,"trigger":"ON_ACCEPTANCE","condition":{"type":"ALWAYS","party":"ACCEPTOR","assetId":"","amount":0}}
                 ]}
                 """);
-        assertTrue(result.accepted(), () -> String.join(" ", result.errors()));
+        assertFalse(result.accepted());
     }
 
     @Test
@@ -360,11 +356,11 @@ class AiContractProtocolTest {
                 """);
 
         assertFalse(result.accepted());
-        assertEquals("Race transfer is not supported.", result.errors().getFirst());
+        assertEquals("Race transfer is not supported.", result.errors().get(0));
     }
 
     @Test
-    void decodesMpDrainAndLaterDealAcceptanceCondition() {
+    void rejectsMpDrainEvenWhenAnotherConditionIsCoreSupported() {
         var result = AiContractProtocol.decode("""
                 {"supported":true,"rejectionReason":"","clauses":[
                   {"kind":"DRAIN_RESOURCE_PERCENT","from":"ACCEPTOR","to":"DEALMAKER","assetId":"mp","amount":50,"periodTicks":0,"trigger":"ON_ACCEPTANCE","condition":{"type":"ALWAYS","party":"ACCEPTOR","assetId":"","amount":0}},
@@ -372,11 +368,7 @@ class AiContractProtocolTest {
                 ]}
                 """);
 
-        assertTrue(result.accepted(), () -> String.join(" ", result.errors()));
-        assertEquals(ClauseKind.DRAIN_RESOURCE_PERCENT, result.clauses().getFirst().kind());
-        assertEquals("magicule", result.clauses().getFirst().assetId());
-        assertEquals(com.github.ovaware.dealmaker.deal.DealConditionType.PARTY_ACCEPTED_OTHER_DEAL,
-                result.clauses().get(1).condition().type());
+        assertFalse(result.accepted());
     }
 
     @Test
@@ -388,7 +380,7 @@ class AiContractProtocolTest {
                 """);
 
         assertTrue(result.accepted(), () -> String.join(" ", result.errors()));
-        var condition = result.clauses().getFirst().condition();
+        var condition = result.clauses().get(0).condition();
         assertEquals(com.github.ovaware.dealmaker.deal.DealConditionType.PARTY_STAT_INCREASED, condition.type());
         assertEquals("minecraft:walk_one_cm", condition.assetId());
         assertEquals(1, condition.amount());
@@ -417,7 +409,7 @@ class AiContractProtocolTest {
 
         assertTrue(result.accepted(), () -> String.join(" ", result.errors()));
         assertEquals(2, result.clauses().size());
-        assertEquals(ClauseKind.KILL_PLAYER, result.clauses().getFirst().kind());
+        assertEquals(ClauseKind.KILL_PLAYER, result.clauses().get(0).kind());
         assertEquals(ClauseKind.END_DEAL, result.clauses().get(1).kind());
         assertEquals(DealTrigger.ON_CONDITION_MET, result.clauses().get(1).trigger());
         assertEquals(com.github.ovaware.dealmaker.deal.DealConditionType.PARTY_HARMED_PARTY,
