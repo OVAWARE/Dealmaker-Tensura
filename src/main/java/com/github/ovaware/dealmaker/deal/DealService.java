@@ -16,6 +16,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -114,10 +115,24 @@ public final class DealService {
             Deal deal = new Deal(UUID.randomUUID(), current.getUUID(), OPEN_ACCEPTOR, contract, parsed.clauses(),
                     DealStatus.PENDING, now, now);
             data(current).deals().add(deal);
+            appendAcceptancePage(pending, deal);
             DealBook.bind(pending, deal);
-            current.sendSystemMessage(Component.literal("Contract created. Give the signed book to another player to accept it with /dealmaker accept "
-                    + deal.id()).withStyle(ChatFormatting.GREEN));
+            current.getInventory().setChanged();
+            current.sendSystemMessage(Component.literal("Contract created. Give the signed book to another player; its final page accepts the contract.")
+                    .withStyle(ChatFormatting.GREEN));
         }));
+    }
+
+    private static void appendAcceptancePage(ItemStack book, Deal deal) {
+        CompoundTag tag = book.getOrCreateTag();
+        ListTag pages = tag.getList("pages", Tag.TAG_STRING);
+        Component page = Component.literal("Dealmaker Contract\n\n").withStyle(ChatFormatting.DARK_RED)
+                .append(Component.literal("[Accept this contract]").withStyle(style -> style
+                        .withColor(ChatFormatting.GREEN)
+                        .withUnderlined(true)
+                        .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/dealmaker accept " + deal.id()))));
+        pages.add(StringTag.valueOf(Component.Serializer.toJson(page)));
+        tag.put("pages", pages);
     }
 
     public static String sever(ServerPlayer maker, UUID id) {
