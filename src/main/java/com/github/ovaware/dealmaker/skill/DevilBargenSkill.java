@@ -176,6 +176,10 @@ public final class DevilBargenSkill extends Skill {
     }
 
     private static void contract(ServerPlayer player) {
+        submitContract(player);
+    }
+
+    public static void submitContract(ServerPlayer player) {
         ItemStack held = player.getMainHandItem();
         if (ViewerBook.isViewer(held)) {
             player.sendSystemMessage(Component.literal("That book is a Devil Bargen viewer, not a contract.")

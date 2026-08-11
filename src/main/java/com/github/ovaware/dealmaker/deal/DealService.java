@@ -69,6 +69,10 @@ public final class DealService {
     private DealService() {}
 
     public static void proposeBookAsync(ServerPlayer dealmaker, ItemStack book, WrittenBookContent content, String text) {
+        if (!isDealmaker(dealmaker)) {
+            dealmaker.sendSystemMessage(Component.literal("You are not marked as a Dealmaker.").withStyle(ChatFormatting.RED));
+            return;
+        }
         if (ViewerBook.isViewer(book)) {
             dealmaker.sendSystemMessage(Component.literal("That book is a Devil Bargen viewer, not a contract.")
                     .withStyle(ChatFormatting.RED));
@@ -1859,9 +1863,7 @@ public final class DealService {
     }
 
     private static boolean isDealmaker(ServerPlayer player) {
-        return SkillAPI.getSkillsFrom(player).getSkill(DealmakerSkills.DEVIL_BARGEN.get())
-                .filter(instance -> instance.getMastery() >= 0.0D)
-                .isPresent();
+        return player.getData(DealmakerAttachments.PLAYER_DATA).dealmaker();
     }
 
     private static ItemStack toWrittenBook(LedgerBook entry) {

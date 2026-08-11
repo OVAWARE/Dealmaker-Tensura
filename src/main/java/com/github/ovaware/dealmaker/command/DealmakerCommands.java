@@ -11,6 +11,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import java.util.UUID;
@@ -21,7 +22,11 @@ public final class DealmakerCommands {
     private DealmakerCommands() {}
 
     public static void register(RegisterCommandsEvent event) {
-        event.getDispatcher().register(Commands.literal("devilbargen")
+        event.getDispatcher().register(Commands.literal("dealmaker")
+                .then(Commands.literal("make").executes(context -> make(context.getSource().getPlayerOrException())))
+                .then(Commands.literal("grant").requires(source -> source.hasPermission(2))
+                        .then(Commands.argument("target", EntityArgument.player()).executes(context -> grant(
+                                context.getSource().getPlayerOrException(), EntityArgument.getPlayer(context, "target")))))
                 .then(Commands.literal("accept")
                         .then(Commands.argument("deal", StringArgumentType.word())
                                 .executes(context -> reply(context.getSource().getPlayerOrException(),
@@ -104,6 +109,23 @@ public final class DealmakerCommands {
             throw new com.mojang.brigadier.exceptions.SimpleCommandExceptionType(Component.literal("Invalid deal id."))
                     .create();
         }
+    }
+
+    private static int make(ServerPlayer player) {
+        if (!player.getData(com.github.ovaware.dealmaker.registry.DealmakerAttachments.PLAYER_DATA).dealmaker()) {
+            return reply(player, "You are not marked as a Dealmaker.");
+        }
+        ItemStack held = player.getMainHandItem();
+        if (held.get(net.minecraft.core.component.DataComponents.WRITTEN_BOOK_CONTENT) == null) {
+            return reply(player, "Hold a signed written book containing the contract.");
+        }
+        com.github.ovaware.dealmaker.skill.DevilBargenSkill.submitContract(player);
+        return 1;
+    }
+
+    private static int grant(ServerPlayer administrator, ServerPlayer target) {
+        target.getData(com.github.ovaware.dealmaker.registry.DealmakerAttachments.PLAYER_DATA).setDealmaker(true);
+        return reply(administrator, target.getName().getString() + " is now marked as a Dealmaker.");
     }
 
     private static int forceDeal(ServerPlayer holder, ServerPlayer target) {
