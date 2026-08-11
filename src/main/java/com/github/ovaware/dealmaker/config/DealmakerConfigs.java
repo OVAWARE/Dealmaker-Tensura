@@ -48,6 +48,10 @@ public final class DealmakerConfigs {
         return server;
     }
 
+    public static ForgeConfigSpec spec() {
+        return SPEC;
+    }
+
     public static void reload() {
         DealmakerServerConfig loaded = new DealmakerServerConfig();
         loaded.aiProvider = AI_PROVIDER.get();

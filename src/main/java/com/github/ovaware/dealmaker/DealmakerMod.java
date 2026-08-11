@@ -11,6 +11,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
@@ -28,6 +29,8 @@ public final class DealmakerMod {
         DealmakerItems.init(modBus);
         DealmakerConfigs.init();
         modBus.addListener(this::onCommonSetup);
+        modBus.addListener(DealmakerMod::onConfigLoading);
+        modBus.addListener(DealmakerMod::onConfigReloading);
         MinecraftForge.EVENT_BUS.addListener(DealmakerCommands::register);
         MinecraftForge.EVENT_BUS.addListener(DealmakerMod::onAddReloadListener);
         MinecraftForge.EVENT_BUS.register(DealmakerEvents.class);
@@ -38,6 +41,14 @@ public final class DealmakerMod {
     }
 
     private void onCommonSetup(FMLCommonSetupEvent event) {
+    }
+
+    private static void onConfigLoading(ModConfigEvent.Loading event) {
+        if (event.getConfig().getSpec() == DealmakerConfigs.spec()) DealmakerConfigs.reload();
+    }
+
+    private static void onConfigReloading(ModConfigEvent.Reloading event) {
+        if (event.getConfig().getSpec() == DealmakerConfigs.spec()) DealmakerConfigs.reload();
     }
 
     private static void onAddReloadListener(AddReloadListenerEvent event) {

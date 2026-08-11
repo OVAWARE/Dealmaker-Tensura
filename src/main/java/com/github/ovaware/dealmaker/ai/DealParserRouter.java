@@ -23,8 +23,6 @@ public final class DealParserRouter {
     public static CompletableFuture<ParseResult> parse(String text, String serverContext) {
         List<String> textErrors = DealPolicy.validateText(text);
         if (!textErrors.isEmpty()) return CompletableFuture.completedFuture(new ParseResult(List.of(), textErrors));
-        ParseResult deterministic = LOCAL.parse(text);
-        if (deterministic.accepted()) return CompletableFuture.completedFuture(deterministic);
         String provider = DealmakerConfigs.server().aiProvider.trim().toUpperCase(Locale.ROOT);
         return switch (provider) {
             case "LOCAL" -> CompletableFuture.completedFuture(LOCAL.parse(text));

@@ -1,0 +1,19 @@
+# LOCAL uses the built-in conservative parser and never contacts an AI service.
+# Set to GOOGLE_AI_STUDIO or OPENROUTER to submit every contract to the selected service.
+aiProvider = "LOCAL"
+
+# Prefer environment variables over storing keys here:
+# GOOGLE_AI_STUDIO_API_KEY or GEMINI_API_KEY
+# OPENROUTER_API_KEY
+googleAiStudioApiKey = ""
+openRouterApiKey = ""
+
+googleModel = "gemini-3.5-flash"
+googleStructuredOutput = false
+openRouterModel = "google/gemini-3.5-flash"
+requestTimeoutSeconds = 90
+connectTimeoutSeconds = 10
+maxOutputTokens = 512
+temperature = 0.0
+requestCooldownSeconds = 5
+logMalformedAiResponse = true
