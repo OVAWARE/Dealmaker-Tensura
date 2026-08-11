@@ -201,14 +201,33 @@ public final class DealService {
 
     public static void tick(ServerPlayer maker) {
         if (maker.tickCount % 20 != 0) return;
-        for (Deal deal : List.copyOf(data(maker).deals())) {
+        List<Deal> deals = data(maker).deals();
+        for (int index = 0; index < deals.size(); index++) {
+            Deal deal = deals.get(index);
             if (deal.status() != DealStatus.ACTIVE) continue;
             ServerPlayer acceptor = maker.server.getPlayerList().getPlayer(deal.acceptorId());
             if (acceptor == null) continue;
+            long now = maker.serverLevel().getGameTime();
+            if (now < deal.nextDueAt()) continue;
             for (DealClause clause : deal.clauses()) {
-                if (clause.trigger() == DealTrigger.ON_RECURRING_DUE && maker.serverLevel().getGameTime() >= deal.nextDueAt()) {
-                    execute(new Deal(deal.id(), deal.dealmakerId(), deal.acceptorId(), deal.originalText(), List.of(clause), deal.status(), deal.createdAt(), deal.nextDueAt()), maker, acceptor, DealTrigger.ON_RECURRING_DUE);
+                if (clause.trigger() == DealTrigger.ON_RECURRING_DUE) {
+                    Deal occurrence = new Deal(deal.id(), deal.dealmakerId(), deal.acceptorId(), deal.originalText(),
+                            List.of(clause), deal.status(), deal.createdAt(), deal.nextDueAt());
+                    if (!execute(occurrence, maker, acceptor, DealTrigger.ON_RECURRING_DUE)) {
+                        // A missed recurring obligation breaches the entire contract. Run every
+                        // explicit breach consequence together before permanently ending it.
+                        execute(deal, maker, acceptor, DealTrigger.ON_BREACH);
+                        deals.set(index, deal.withStatus(DealStatus.BREACHED));
+                        maker.sendSystemMessage(Component.literal("A Dealmaker contract was breached.").withStyle(ChatFormatting.DARK_RED));
+                        acceptor.sendSystemMessage(Component.literal("You breached a Dealmaker contract.").withStyle(ChatFormatting.DARK_RED));
+                        break;
+                    }
                 }
+            }
+            if (deals.get(index) == deal) {
+                long period = deal.clauses().stream().filter(clause -> clause.trigger() == DealTrigger.ON_RECURRING_DUE)
+                        .mapToLong(DealClause::periodTicks).min().orElse(20L);
+                deals.set(index, deal.withNextDueAt(now + period));
             }
         }
     }

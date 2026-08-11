@@ -54,6 +54,9 @@ public final class AiContractProtocol {
               amount 100. The source takes only the remainder; redirected damage retains the original damage source.
             Repeating item payments use TRANSFER_ITEM_AMOUNT with ON_RECURRING_DUE and periodTicks >= 20, exactly
             like every other recurring typed action. One in-game day is 24000 ticks.
+            If a recurring payment fails because the payer lacks the required asset, the contract is breached and every
+            ON_BREACH clause runs once. For “every second you pay 1 diamond; if this fails you die and forfeit your soul”,
+            emit the recurring TRANSFER_ITEM_AMOUNT plus KILL_PLAYER and FORFEIT_SOUL clauses with trigger ON_BREACH.
             - FORFEIT_SOUL: assetId empty, amount 0. periodTicks 0 means an immediate voluntary soul transfer.
               A positive periodTicks means an explicit recurring-payment default; use the payment's period.
             - KILL_PLAYER: kill `from` through the server's normal death path; `to` is the other contract party,
